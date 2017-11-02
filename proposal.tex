@@ -31,7 +31,7 @@
 \marginparwidth 0.5in
 \textwidth 6.5in
 \parindent 0in
-\parskip 1.5ex
+\parskip 1.0ex
 
 \begin{document}
 
@@ -41,20 +41,111 @@
          {Amy Gu and Brian Yu}
          {Computer Science 182}
 
-In our project, we will design a real-time musical accompaniment system that
-will attempt to match a human soloist's playing in terms of its tempo,
-pitch, and dynamics.
-
 \section{Overview}
+
+In our project, we plan to design a real-time musical accompaniment system
+that will attempt to accompany a human soloist's instrumental
+playing in terms of the following criteria:
+
+
+\begin{itemize}
+    \item \textbf{Tempo}: such that if the human soloist speeds up or
+        slows down while performing, the computer-generated accompaniment
+        will likewise adjust its pace
+    \item \textbf{Pitch}: such that if the human soloist is slightly out
+        of key, or drifts out of key during the piece, the accompaniment
+        adjusts its own pitch accordingly
+    \item \textbf{Dynamics}: such that if the human soloist changes the
+        volume at which he or she plays, the accompaniment follows
+\end{itemize}
+
+Our goal is to design a system that listens for the soloist's performance,
+and uses that information to predict what a player's behavior is going
+to be in the next note in order to most effectively accompany it.
 
 \section{Course Topics}
 
+Our project will primarily make use of Hidden Markov Models in order to
+model the behavior of the human soloist. In this case, our ``hidden''
+states will be the actual notes played by the soloist at any given
+time step, and the emissions will be the data that our system observes
+via sound input processing, which is likely to be quite noisy.
+
+We think it's a reasonable assumption to make that the soloist's 
+tempo, pitch, and dynamics will be independent of one another (i.e.
+a soloist playing louder tells us nothing about how out of key they
+will perform); as a result, it makes sense to us to use three separate
+Hidden Markov Models to represent each of unknown variables we're
+trying to draw inferences about.
+
 \section{Expected Behavior}
+
+We will provide our system with a pre-populated piece that the soloist
+will play and a pre-populated accompaniment track that the system
+will play simultaneously: these pieces will be encoded as a sequence
+of notes and durations (similar to how a MIDI file is represented).
+
+During the performance, we will use the system's microphone to sample
+sound in given windows of fixed length (about 1/8 of a second) and
+using Fast Fourier Transform, will convert the sound input into 
+a guess as to which note is being played and the volume of the sound
+during that window.
+
+Using those data points as our observed emissions, we will use
+the filtering algorithm to predict future states of the player such
+that we can match the soloist's performance with the appropriate
+accompaniment.
+
+In order to achieve this, we'll need to make a number of assumptions.
+In particular, we'll need to assume a model for the transition
+function (i.e. the probability of playing a next frequency given
+the frequency currently played). We'll also need a model for the
+noisiness of our sensor input, which we can empirically gather
+through experimentation with the sensors.
+
+We'll also need to make some assumptions about the player's behavior:
+in particular, we assume that they will play the correct notes
+from the song provided to the system, and don't skip or repeat
+any notes, and that the speed of their notes is not faster than
+the sampling window of the recorded audio.
 
 \section{Issues to Focus On}
 
+Signal processing will be an issue that needs to be addressed;
+in particular, our sensor input is quite noisy and we'll need
+to develop an emissions model for it. We can likely do some
+reinforcement learning on some early trials to learn what an
+appropriate emissions model should be.
+
+We'll likewise also need to focus on determining a reasonable
+transition model for how the hidden states interact with
+one another.
+
+In addition, we'll need to consider how our three Hidden Markov
+Models interact with one another, insofar as we'll need some
+shared information about where the soloist in the piece
+based on the data from the models, where  each model will
+likely contribute to this estimate.
+
+We also anticipate non-AI related implementation challenges,
+such as the fact that the system's audio will have to play
+simultaneously with the soloist's audio and may be caught
+during signal processing.
+
 \section{Papers}
 
+\begin{itemize}
+    \item Dannenberg. \textit{An On-Line Algorithm for Real-Time Accompaniment} (1985)
+    \item McLeod. \textit{Fast, Accurate Pitch Detection Tools for Musical Analysis} (2008)
+    \item Pardo and Birmingham. \textit{Modeling Form for On-line Following of Musical Performances} (2005)
+    \item Raphael. \textit{A Bayesian Network for Real-Time Musical Accompaniment} (2001)
+\end{itemize}
+
 \section{Distribution of Work}
+
+In general, Brian will focus on the input and modeling side
+of the problem, and Amy will focus on the filtering and
+inference part of the problem, though we will collaborate
+on most parts of the project.
 
 \end{document}
