@@ -1,0 +1,9 @@
+https://github.com/bastibe/SoundCard
+    - for live recording
+
+http://people.csail.mit.edu/hubert/pyaudio/
+    - also for live recording
+
+Aubio
+    - useful for the musical analysis
+PySoundCard?
