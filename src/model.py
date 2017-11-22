@@ -35,8 +35,8 @@ def most_likely_sequence(sequence, configuration):
             p = transition(state, prev_state, num_states) * mls(time - 1, prev_state)
             prevs.append((p, prev_state))
         prevs.sort(reverse=True)
-        computed[time, state] = prevs[0]
-        return prevs[0]
+        computed[time, state] = evidence_prob * prevs[0][0], prevs[0][1]
+        return computed[time, state]
     
     # Compute all most likely sequences.
     for t in range(1, len(sequence) + 1):
@@ -89,7 +89,7 @@ def transition(next_state, cur_state, num_states):
     
     # Set probability for future and past.
     cur_sum = sum(probs)
-    if cur_state != num_states  - 1:
-        probs[cur_state + 1] = cur_sum * 3
-    probs[cur_state] = cur_sum * 3
+    if cur_state != num_states - 1:
+        probs[cur_state + 1] = cur_sum * 2
+    probs[cur_state] = cur_sum * 1
     return normalize(probs)[next_state]
