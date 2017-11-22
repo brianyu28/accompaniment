@@ -12,6 +12,7 @@ def main():
     for note in notes["notes"]:
         print(note)
 
+
 def extract_notes(filename):
     """
     Takes a .wav file and uses Fast Fourier Transform
@@ -49,6 +50,7 @@ def extract_notes(filename):
         "notes": sequence,
         "duration": total_frames / float(samplerate)
     }
+
 
 if __name__ == "__main__":
     main()

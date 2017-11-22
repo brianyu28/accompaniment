@@ -4,6 +4,7 @@ import sys
 import model
 import sensors
 
+
 def main():
 
     # Parse command line arguments.
@@ -12,7 +13,7 @@ def main():
     except ValueError:
         print("Usage: harmonize config.json filename.wav")
         sys.exit(1)
-    
+
     # Read data from input files.
     try:
         sequence = sensors.extract_notes(filename)
@@ -26,10 +27,11 @@ def main():
     except (json.decoder.JSONDecodeError, ValueError):
         print("Error parsing configuration file.")
         sys.exit(4)
-    
+
     # Compute the most likely sequence.
     mls = model.most_likely_sequence(sequence["notes"], configuration["piece"])
     print(mls)
-    
+
+
 if __name__ == "__main__":
     main()
