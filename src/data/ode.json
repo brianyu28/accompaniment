@@ -1,0 +1,36 @@
+{
+    "piece": [
+        {"pitch": 64},
+        {"pitch": 64},
+        {"pitch": 65},
+        {"pitch": 67},
+        {"pitch": 67},
+        {"pitch": 65},
+        {"pitch": 64},
+        {"pitch": 62},
+        {"pitch": 60},
+        {"pitch": 60},
+        {"pitch": 62},
+        {"pitch": 64},
+        {"pitch": 64},
+        {"pitch": 62},
+        {"pitch": 62},
+        {"pitch": 64},
+        {"pitch": 64},
+        {"pitch": 65},
+        {"pitch": 67},
+        {"pitch": 67},
+        {"pitch": 65},
+        {"pitch": 64},
+        {"pitch": 62},
+        {"pitch": 60},
+        {"pitch": 60},
+        {"pitch": 62},
+        {"pitch": 64},
+        {"pitch": 62},
+        {"pitch": 60},
+        {"pitch": 60}
+    ],
+    "accompaniment": {
+    }
+}
