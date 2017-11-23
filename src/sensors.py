@@ -22,6 +22,8 @@ def extract_notes(filename):
     https://github.com/aubio/aubio/blob/master/python/demos/demo_notes.py
     """
 
+    print("Extracting notes from audio file...")
+
     # Define constants for audio extraction.
     downsample = 1
     samplerate = 44100 // downsample

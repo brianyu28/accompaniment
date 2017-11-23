@@ -1,3 +1,5 @@
+
+
 def normalize(lst):
     """
     Normalize a probability distribution.

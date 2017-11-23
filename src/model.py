@@ -7,6 +7,8 @@ def most_likely_sequence(sequence, configuration):
     Computed using Viterbi's Algorithm.
     """
 
+    print("Computing most likely sequence of notes...")
+
     num_notes = len(sequence)
     num_states = num_notes + 1  # Add 1 for before all notes play.
 
