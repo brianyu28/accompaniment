@@ -1,0 +1,94 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm}
+\DeclareMathOperator*{\E}{\mathbb{E}}
+\let\Pr\relax
+\DeclareMathOperator*{\Pr}{\mathbb{P}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\inprod}[1]{\left\langle #1 \right\rangle}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\handout}[5]{
+  \noindent
+  \begin{center}
+  \framebox{
+    \vbox{
+      \hbox to 5.78in { {\bf #5 } \hfill #2 }
+      \vspace{4mm}
+      \hbox to 5.78in { {\Large \hfill #1  \hfill} }
+      \vspace{2mm}
+      \hbox to 5.78in { {\em #3 \hfill #4} }
+    }
+  }
+  \end{center}
+  \vspace*{4mm}
+}
+\newcommand{\headline}[5]{\handout{#1}{#2}{#3}{#4}{#5}}
+\topmargin 0pt
+\advance \topmargin by -\headheight
+\advance \topmargin by -\headsep
+\textheight 8.9in
+\oddsidemargin 0pt
+\evensidemargin \oddsidemargin
+\marginparwidth 0.5in
+\textwidth 6.5in
+\parindent 0in
+\parskip 1.0ex
+
+\begin{document}
+
+\headline{Project Update: Musical Accompaniment}
+         {November 22, 2017}
+         {}
+         {Amy Gu and Brian Yu}
+         {Computer Science 182}
+
+\section{Problem We're Working On}
+
+Our project to accompany musical performance with
+an accompaniment track is in progress. It became clear
+to us, in starting to work on the project, that real-time
+musical accompaniment is a little infeasible for our purposes
+for a number of reasons: in particular, the computer would
+have to process audio input from the microphone which would
+include both the performer's playing as well as the computer
+produced audio from the prior note. Instead, we've decided to
+implement this as an offline accompaniment algorithm, whereby
+the program is fed a .wav file containing a recording of the playing,
+and the program will output a new .wav file containing the
+original recording with the accompaniment soundtrack overlayed
+on top of it.
+
+\section{Progress}
+
+So far, we've implemented Viterbi's algorithm to find the
+most likely sequence of states given all of our ``evidence''
+(the noisy emissions gathered from the audio recording of the
+performer). We ultimately decided to have our hidden states represent
+which note of the piece the soloist is currently playing at a given
+timestep (where timesteps are derived from significant points in the
+Fast Fourier transform). Emissions, meanwhile, are the notes that
+are extracted from performing the Fast Fourier transform on the recorded
+.wav file. Viterbi's allows us to get a reasonable estimate of where
+we are in the piece at any point in the recording, for moderately
+clean audio recordings.
+
+\section{Challenges}
+
+The next step for us is going to be integrating some intelligence
+about the dynamics and the pitch of the playing. We'd  like it such that,
+if the player is slightly off pitch, or is slightly louder or softer
+than expected, that the accompaniment can match this appropriately.
+We're still a bit unsure as to how to integrate that with our existing
+Hidden Markov Model, or whether we should be representing this as a separate problem
+that's just informed by our now-computed knowledge of where we are in the piece.
+
+We were also wondering if it might be possible to encode some notion of
+how long a note has been playing for into our transition dynamics. For instance,
+our hidden state right now encodes the idea that at timestep $t$, we are currently
+playing note $n$. But if we've been playing note $n$ for a longer a mount of time,
+it seems like it should be more likely tat we move to note $n+1$ in the next time step.
+But differing the transition dynamics based on how much time the note has been playing
+for seems to be in violation of the Markov property. Is it common or reasonable
+to make slightly alterations to the Markov property's invariant to better suit the
+type of problem that we're attempting to solve?
+
+\end{document}

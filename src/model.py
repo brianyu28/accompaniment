@@ -67,7 +67,7 @@ def emission(observed, hidden):
     of seeing a particular observed note
     given a hidden state.
     """
-    observed = int(observed)
+    observed = min(int(observed), 127)
     hidden = int(hidden)
 
     # Default to each probability having equal weight.

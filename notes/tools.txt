@@ -7,3 +7,10 @@ http://people.csail.mit.edu/hubert/pyaudio/
 Aubio
     - useful for the musical analysis
 PySoundCard?
+
+Generating MIDIs
+https://stackoverflow.com/questions/7276139/using-python-to-create-midis
+https://stackoverflow.com/questions/569321/simple-cross-platform-midi-library-for-python
+
+MIDI to WAV
+https://pypi.python.org/pypi/midi2audio/0.1.1
