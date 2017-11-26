@@ -48,6 +48,8 @@ def extract_notes(filename):
         total_frames += read
         if read < hop_s:
             break
+    if sequence[0][0] < 0.05:
+        sequence = sequence[1:]
     return {
         "notes": sequence,
         "duration": total_frames / float(samplerate)
