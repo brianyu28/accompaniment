@@ -23,10 +23,10 @@ def generate(filename, sequence, configuration, mls):
            str(note_number) not in configuration["accompaniment"]:
             continue
         time = sequence["notes"][i - 1][0]
-        pitch = configuration["accompaniment"][str(note_number)]["pitch"]
+        pitches = configuration["accompaniment"][str(note_number)]
         notes[note_number] = {
             "time": time,
-            "pitch": pitch
+            "pitches": pitches
         }
 
         # Set duration of the prior note.
@@ -44,8 +44,9 @@ def generate(filename, sequence, configuration, mls):
     for i in range(1, prev + 1):
         if i not in notes:
             continue
-        midifile.addNote(track, channel, notes[i]["pitch"],
-                         notes[i]["time"], notes[i]["duration"], 100)
+        for pitch in notes[i]["pitches"]:
+            midifile.addNote(track, channel, pitch,
+                             notes[i]["time"], notes[i]["duration"], 100)
 
     # Create temporary MIDI file.
     identifier = str(uuid.uuid4())

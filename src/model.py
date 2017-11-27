@@ -32,7 +32,7 @@ def most_likely_sequence(sequence, configuration):
             return computed[time, state][0]
 
         evidence_prob = emission(sequence[time - 1][1],
-                                 configuration[state - 1]["pitch"])
+                                 configuration[state - 1])
 
         # Compute max over previous timestep.
         # Stores tuple of (state_number, probability)
