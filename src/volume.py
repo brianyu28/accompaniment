@@ -13,10 +13,10 @@ def get_volumes(configuration, sequence, mls):
 
     # Get only the notes we think are actually notes.
     data = []
-    for i, note in enumerate(mls):
+    for note in mls:
         if note not in played:
             played.add(note)
-            data.append(sequence[i][2])
+            data.append(sequence[note][2])
 
     # Get the set of all dynamics.
     dynamics = sorted(list(set(note["vel"] for note in configuration["piece"])))
