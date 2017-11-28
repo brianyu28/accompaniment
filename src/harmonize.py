@@ -4,6 +4,7 @@ import sys
 import generator
 import model
 import sensors
+import volume
 
 
 def main():
@@ -31,8 +32,8 @@ def main():
 
     # Compute the most likely sequence.
     mls = model.most_likely_sequence(sequence["notes"], configuration["piece"])
-    print(mls)
-    generator.generate(filename, sequence, configuration, mls)
+    volumes = volume.get_volumes(configuration, sequence["notes"], mls)
+    generator.generate(filename, sequence, configuration, mls, volumes)
 
 
 if __name__ == "__main__":

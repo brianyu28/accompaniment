@@ -1,4 +1,4 @@
+aubio
 midi2audio
 MIDIUtil
-pyaudio
 pydub

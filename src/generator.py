@@ -7,7 +7,7 @@ from midiutil import MIDIFile
 from pydub import AudioSegment
 
 
-def generate(filename, sequence, configuration, mls):
+def generate(filename, sequence, configuration, mls, volumes):
     """
     Generates merged audio file.
     """
@@ -23,9 +23,11 @@ def generate(filename, sequence, configuration, mls):
            str(note_number) not in configuration["accompaniment"]:
             continue
         time = sequence["notes"][i - 1][0]
+        velocity = volumes[configuration["piece"][note_number - 1]["vel"]]
         pitches = configuration["accompaniment"][str(note_number)]
         notes[note_number] = {
             "time": time,
+            "velocity": velocity,
             "pitches": pitches
         }
 
@@ -46,7 +48,7 @@ def generate(filename, sequence, configuration, mls):
             continue
         for pitch in notes[i]["pitches"]:
             midifile.addNote(track, channel, pitch,
-                             notes[i]["time"], notes[i]["duration"], 100)
+                             notes[i]["time"], notes[i]["duration"], notes[i]["velocity"])
 
     # Create temporary MIDI file.
     identifier = str(uuid.uuid4())
