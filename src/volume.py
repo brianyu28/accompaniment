@@ -3,6 +3,12 @@ from statistics import median
 
 
 def get_volumes(configuration, sequence, mls):
+    """
+    Given a configuration piece and a sequence of notes
+    with their corresponding velocities, performs k-means
+    clustering to identify the likely volumes of the 
+    dynamic symbols in the piece.
+    """
     played = set()
 
     # Get only the notes we think are actually notes.
@@ -19,6 +25,16 @@ def get_volumes(configuration, sequence, mls):
 
 
 def k_means(k, data):
+    """
+    Performs a variant on k-means clustering to learn
+    dynamics data.
+
+    In particular, uses dynamic data from the piece, and finds a
+    local optimum for minimizing the distance to means.
+    Then, deviating from the original k-means algorithm,
+    takes the median of the cluster, to avoid being skewed
+    too much by outlier data points.
+    """
 
     # Generate k means.
     data_range = min(data), max(data)
@@ -66,4 +82,8 @@ def k_means(k, data):
 
 
 def cluster(i, data, assignments):
+    """
+    Returns all data in the data array in cluster i,
+    where data is assigned based on assignments.
+    """
     return [data[j] for j in range(len(data)) if assignments[j] == i]
