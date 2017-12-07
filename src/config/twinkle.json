@@ -1,0 +1,15 @@
+{
+    "piece": [{"pitch": 62, "vel": 5},
+              {"pitch": 62, "vel": 5},
+              {"pitch": 69, "vel": 5},
+              {"pitch": 69, "vel": 5},
+              {"pitch": 71, "vel": 5},
+              {"pitch": 71, "vel": 5},
+              {"pitch": 69, "vel": 5}],
+    "accompaniment": {
+        "1": [50],
+        "3": [57],
+        "5": [59],
+        "7": [57]
+    }
+}
