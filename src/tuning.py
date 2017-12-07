@@ -1,5 +1,38 @@
 from util import normalize
 import numpy as np
+import sys
+import sensors
+import json
+
+def main():
+    # Parse command line arguments.
+    try:
+        _, config, filename = sys.argv
+    except ValueError:
+        print("Usage: tuning config.json filename.wav")
+        sys.exit(1)
+
+    # Read data from input files.
+    try:
+        sequence = sensors.extract_notes(filename)
+        configuration = json.loads(open(config).read())
+    except RuntimeError:
+        print("Error parsing input file.")
+        sys.exit(2)
+    except IOError:
+        print("Configuration file could not be found.")
+        sys.exit(3)
+    except (json.decoder.JSONDecodeError, ValueError):
+        print("Error parsing configuration file.")
+        sys.exit(4)
+
+    seq_pitches, config_pitches = extract_pitches(sequence, configuration)
+    emission_model, transition_model = tune_parameters(seq_pitches, config_pitches)
+
+def extract_pitches(sequence, configuration):
+    seq_pitches = [int(i[1]) for i in sequence["notes"]]
+    config_pitches = [i["pitch"] for i in configuration["piece"]]
+    return seq_pitches, config_pitches
 
 def tune_parameters(sequence, configuration):
     """
@@ -9,16 +42,31 @@ def tune_parameters(sequence, configuration):
     """
     num_states = len(configuration) + 1
     num_obs = len(sequence) + 1
+    # print("Num_states")
+    # print(num_states)
+    #
+    # print("Num_obs")
+    # print(num_obs)
+
+    print("Sequence:")
+    print(sequence)
+    print("Configuration")
+    print(configuration)
 
     # Initialize emission and transition probabilities according to our
     # knowledge of the domain
-    emission_model = init_emissions(num_obs)
+    emission_model = init_emissions(num_obs, num_states, sequence, configuration)
     transition_model = init_transitions(sequence, configuration, num_states)
+    print("Initial transition model")
+    print(transition_model)
+    print("Initial emission model")
+    print(emission_model)
 
     # old_emissions = None
     # old_transitions = None
     i = 0
 
+    print("Initiating tuning...")
     # Iterate until probabilities converge
     while i < 20:
 
@@ -51,6 +99,8 @@ def tune_parameters(sequence, configuration):
         transition_model = update_transition_model(gammas, xis, num_states)
 
     # Return optimized parameters
+    print(emission_model)
+    print(transition_model)
     return emission_model, transition_model
 
 def compare_models(model1, model2): # for vectors, not matrices. Doesn't work
@@ -61,30 +111,42 @@ def compare_models(model1, model2): # for vectors, not matrices. Doesn't work
     unit2 = model2 / np.linalg.norm(model2)
     return unit1.dot(unit2)
 
-def init_emissions(num_obs):
+def init_emissions(num_obs, num_states, sequence, configuration):
     """
     Generates an initial emission model based on our knowledge of the domain.
     """
-    emission_model = []
-    for observed in xrange(128):
-        for hidden in xrange(num_obs):
+    # Default to each probability having equal weight.
+    emission_model = np.tile(np.repeat(1.0, 128), (128, 1))
 
-            # Default to each probability having equal weight.
-            probs = [1 for i in range(128)]
+    for i in xrange(128):
+        emission_model[i] = normalize(emission_model[i])
 
-            # Add weight to states within a range of 5 from the actual.
-            for i in range(3):
-                for j in range(max(0, hidden - i), min(128, hidden + i + 1)):
-                    probs[j] += 10
-        emission_model.append(normalize(probs))
+    return emission_model
+
+    for observed in sequence:
+        # Add weight to states within a range of 5 from the actual.
+        for i in range(3):
+            for j in range(max(0, observed - i), min(128, observed + i + 1)):
+                emission_model[observed][j] += 10
+        # print("before")
+        # print(emission_model[observed])
+        # print("normalizing emission[observed]")
+        emission_model[observed] = normalize(emission_model[observed])
+        # print(emission_model[observed])
     return emission_model
 
 def init_transitions(sequence, configuration, num_states):
     """
     Generates an initial transition model based on our knowledge of the domain.
     """
-    for cur_state in xrange(len(sequence)):
-        for next_state in xrange(len(sequence)):
+    transition_model = np.tile(np.repeat(1.0, num_states), (num_states, 1))
+
+    for i in xrange(num_states):
+        transition_model[i] = normalize(transition_model[i])
+    return transition_model
+
+    for cur_state in xrange(num_states):
+        for next_state in xrange(num_states):
             probs = [0 for i in range(num_states)]
 
             # Descending probabilities for all future states.
@@ -96,7 +158,14 @@ def init_transitions(sequence, configuration, num_states):
             if cur_state != num_states - 1:
                 probs[cur_state + 1] = cur_sum * 2
             probs[cur_state] = cur_sum * 1
-    return transition_model
+
+            transition_model[cur_state][next_state] = probs[cur_state]
+            print("Transition model row")
+            print(transition_model[cur_state])
+        transition_model[cur_state] = normalize(transition_model[cur_state])
+    print("Transposing")
+    print(transition_model.transpose())
+    return transition_model.transpose()
 
 def forward_alg(sequence, configuration,
                 emission_model, transition_model,
@@ -106,9 +175,6 @@ def forward_alg(sequence, configuration,
     where forward_probs[t][cur_state] corresponds to the probability that
     cur_state occurs at time t, given all the evidence from time 1 to t.
     """
-    num_states = len(configuration) + 1
-    num_obs = len(sequence) + 1
-
     # Initialize base case according to initial distribution, which is that
     # the probability of being at note 0 is 100%.
     forward_probs = np.tile(np.repeat(None, num_states), (num_obs, 1))
@@ -120,9 +186,12 @@ def forward_alg(sequence, configuration,
     for t in xrange(1, num_obs + 1):
         for cur_state in xrange(num_states):
             temp = np.dot(forward_probs[t - 1], transition_model[cur_state])
-            prob = temp * emission_model[sequence[t]][cur_state]
+            prob = temp * emission_model[sequence[t]][configuration[cur_state]]
             forward_probs[t][cur_state] = prob
-        normalize(forward_probs[t])
+        try:
+            normalize(forward_probs[t])
+        except:
+            pass
 
     # Return the array of forward probabilities.
     return forward_probs
@@ -218,3 +287,6 @@ def update_transition_model(gammas, xis, num_states):
             transition_model[next_state][cur_state] = float(num) / denom
 
     return transition_model
+
+if __name__ == "__main__":
+    main()
