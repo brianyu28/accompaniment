@@ -7,35 +7,52 @@ def tune_parameters(sequence, configuration):
     re-estimate the emission and transition probabilities
     of the Hidden Markov Model.
     """
+    num_states = len(configuration) + 1
+    num_obs = len(sequence) + 1
+
     # Initialize emission and transition probabilities according to our
     # knowledge of the domain
-    emission_model = init_emissions(sequence, configuration)
-    transition_model = init_transitions(sequence, configuration)
+    emission_model = init_emissions(num_obs)
+    transition_model = init_transitions(sequence, configuration, num_states)
+
+    old_emissions = None
+    old_transitions = None
+    i = 0
 
     forward_probs = forward_alg(sequence, configuration, emission_model, transition_model)
     backward_probs = backward_alg(sequence, configuration, emission_model, transition_model)
 
     # Iterate until probabilities converge
+    while i < 20 or old_emissions is None or old_transitions is None or
+          (np.linalg.norm(emission_model.dot(old_emissions)) < 0.95
+           and np.linalg.norm(emission_model.dot(old_emissions)) < 0.95):
 
         # EXPECTATION STEP (E-STEP):
-
         # Calculate gamma for all x and t
+        gammas = get_gammas(forward_probs, backward_probs, num_states, num_obs)
 
         # Calculate xi for all t, x_k, x_k+1
+        xis = get_xis(forward_probs, backward_probs,
+                      transition_model, emission_model,
+                      num_states, num_obs)
 
         # MAXIMIZATION STEP (M-STEP)
 
         # Re-estimate transition probabilities
+        old_emissions = emission_model
+        emission_model = update_emission_model(gammas, num_states, num_obs)
 
         # Re-estimate emission probabilities
+        old_transitions = transition_model
+        transition_model = update_transition_model(gammas, xis, num_states)
 
     # Return optimized parameters
-    pass
+    return emission_model, transition_model
 
-def init_emissions(sequence, configuration):
+def init_emissions(num_obs):
     emission_model = []
     for observed in xrange(128):
-        for hidden in xrange(len(sequence)):
+        for hidden in xrange(num_obs):
 
             # Default to each probability having equal weight.
             probs = [1 for i in range(128)]
@@ -47,7 +64,7 @@ def init_emissions(sequence, configuration):
         emission_model.append(normalize(probs))
     return emission_model
 
-def init_transitions(sequence, configuration):
+def init_transitions(sequence, configuration, num_states):
     for cur_state in xrange(len(sequence)):
         for next_state in xrange(len(sequence)):
             probs = [0 for i in range(num_states)]
@@ -121,33 +138,66 @@ def backward_alg(sequence, configuration, emission_model, transition_model):
 
     return backward_probs
 
-def gamma(forward_probs, backward_probs):
+def get_gammas(forward_probs, backward_probs, num_states, num_obs):
     """
-    Returns the probability of being in state cur_state at time k
+    Generates an array gammas, where gammas[k][cur_state] is
+    the probability of being in state cur_state at time k
     given all observations from time 1 to t, where 1 < k < t.
     """
-    pass
+    gammas = np.tile(np.repeat(None, num_states), (num_obs, 1))
 
-def xi(cur_state, next_state, observations):
+    for k in xrange(num_obs):
+        gammas[k] = normalize(forward_probs[k] * backward_probs[k + 1])
+
+    return gammas
+
+def get_xis(forward_probs, backward_probs, transition_model, emission_model,
+            num_states, num_obs):
     """
-    Returns the probability of being in cur_state at time k
-    and next_state at time k + 1, where 1 < k < t.
+    Generates an array xis, where xis[k][cur_state][next_state]
+    is the probability of being in cur_state at time k
+    and next_state at time k + 1, where 1 < k < t,
     given all the observations from time 1 to t.
     """
-    pass
+    xis = np.tile(None, (num_states, num_states, num_obs))
 
-def calc_new_transitions(cur_state, next_state, observations):
-    """
-    Returns the probability of being in cur_state at time k
-    and next_state at time k + 1, where 1 < k < t.
-    given all the observations from time 1 to t.
-    """
-    pass
+    for k in xrange(num_obs):
+        for cur_state in xrange(num_states):
+            for next_state in xrange(num_states):
+                prob = (forward_probs[k][cur_state][next_state]
+                       * transition_model[next_state][cur_state]
+                       * emission_model[sequence[k + 1]][next_state]
+                       * backward_probs[k + 1][cur_state])
+                xis[k][cur_state][next_state] = prob
+            normalize(xis[k][cur_state])
 
-def calc_new_emissions(cur_state, next_state, observations):
+    return xis
+
+def update_emission_model(gammas, num_states, num_obs):
     """
-    Returns the probability of being in cur_state at time k
-    and next_state at time k + 1, where 1 < k < t.
-    given all the observations from time 1 to t.
+    Returns the new emission model based on gamma.
     """
-    pass
+    emission_model = np.tile(np.repeat(None, num_states), (num_obs, 1))
+
+    for k in xrange(num_obs):
+        for cur_state in xrange(num_states):
+            cur_obs =
+            num = np.sum(gammas[:, cur_state] * (sequence[k] == cur_obs))
+            denom = np.sum(gammas[:, cur_state])
+            emission_model[k][cur_state] = float(num) / denom
+
+    return emission_model
+
+def update_transition_model(gammas, xis, num_states):
+    """
+    Returns the new transition model based on gamma and xi.
+    """
+    transition_model = np.tile(np.repeat(None, num_states), (num_states, 1))
+
+    for next_state in xrange(num_states):
+        for cur_state in xrange(num_states):
+            num = np.sum(xis[:, cur_state, next_state])
+            denom = np.sum(gammas[:, cur_state])
+            transition_model[next_state][cur_state] = float(num) / denom
+
+    return transition_model
