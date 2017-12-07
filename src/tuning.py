@@ -15,19 +15,23 @@ def tune_parameters(sequence, configuration):
     emission_model = init_emissions(num_obs)
     transition_model = init_transitions(sequence, configuration, num_states)
 
-    old_emissions = None
-    old_transitions = None
+    # old_emissions = None
+    # old_transitions = None
     i = 0
 
-    forward_probs = forward_alg(sequence, configuration, emission_model, transition_model)
-    backward_probs = backward_alg(sequence, configuration, emission_model, transition_model)
-
     # Iterate until probabilities converge
-    while i < 20 or old_emissions is None or old_transitions is None or
-          (np.linalg.norm(emission_model.dot(old_emissions)) < 0.95
-           and np.linalg.norm(emission_model.dot(old_emissions)) < 0.95):
+    while i < 20:
+
+        # Calculate forward and backward probabilities under current models
+        forward_probs = forward_alg(sequence, configuration,
+                                    emission_model, transition_model,
+                                    num_states, num_obs)
+        backward_probs = backward_alg(sequence, configuration,
+                                      emission_model, transition_model,
+                                      num_states, num_obs)
 
         # EXPECTATION STEP (E-STEP):
+
         # Calculate gamma for all x and t
         gammas = get_gammas(forward_probs, backward_probs, num_states, num_obs)
 
@@ -36,11 +40,11 @@ def tune_parameters(sequence, configuration):
                       transition_model, emission_model,
                       num_states, num_obs)
 
-        # MAXIMIZATION STEP (M-STEP)
+        # MAXIMIZATION STEP (M-STEP):
 
         # Re-estimate transition probabilities
         old_emissions = emission_model
-        emission_model = update_emission_model(gammas, num_states, num_obs)
+        emission_model = update_emission_model(sequence, gammas, num_states, num_obs)
 
         # Re-estimate emission probabilities
         old_transitions = transition_model
@@ -49,7 +53,18 @@ def tune_parameters(sequence, configuration):
     # Return optimized parameters
     return emission_model, transition_model
 
+def compare_models(model1, model2): # for vectors, not matrices. Doesn't work
+    """
+    Compares two vectors by returning the dot product of their unit vectors.
+    """
+    unit1 = model1 / np.linalg.norm(model1)
+    unit2 = model2 / np.linalg.norm(model2)
+    return unit1.dot(unit2)
+
 def init_emissions(num_obs):
+    """
+    Generates an initial emission model based on our knowledge of the domain.
+    """
     emission_model = []
     for observed in xrange(128):
         for hidden in xrange(num_obs):
@@ -65,6 +80,9 @@ def init_emissions(num_obs):
     return emission_model
 
 def init_transitions(sequence, configuration, num_states):
+    """
+    Generates an initial transition model based on our knowledge of the domain.
+    """
     for cur_state in xrange(len(sequence)):
         for next_state in xrange(len(sequence)):
             probs = [0 for i in range(num_states)]
@@ -80,7 +98,9 @@ def init_transitions(sequence, configuration, num_states):
             probs[cur_state] = cur_sum * 1
     return transition_model
 
-def forward_alg(sequence, configuration, emission_model, transition_model):
+def forward_alg(sequence, configuration,
+                emission_model, transition_model,
+                num_states, num_obs):
     """
     Generates an array forward_probs through the forward algorithm,
     where forward_probs[t][cur_state] corresponds to the probability that
@@ -107,20 +127,18 @@ def forward_alg(sequence, configuration, emission_model, transition_model):
     # Return the array of forward probabilities.
     return forward_probs
 
-def backward_alg(sequence, configuration, emission_model, transition_model):
+def backward_alg(sequence, configuration,
+                 emission_model, transition_model,
+                 num_states, num_obs):
     """
     Generates an array backward_probs through the backward algorithm,
     where backward_probs[k + 1][cur_state] corresponds to
     the probability that the evidence from time k + 1 to t occurs,
     given that cur_state occurred at timestep k.
     """
-    num_states = len(configuration) + 1
-    num_obs = len(sequence) + 1
-
     # Initialize base case for recursive calculation, which is that the
     # probability of emitting anything for the final timestep is equivalent to
     # the probability of transitioning from the penultimate to the final state.
-    # All other probabilities are initialized as None.
     backward_probs = np.tile(np.repeat(None, num_states), (num_obs, 1))
     backward_probs[num_obs] = transition_model[sequence[num_obs]]
     backward_probs[0] = np.repeat(0, num_states)
@@ -128,7 +146,7 @@ def backward_alg(sequence, configuration, emission_model, transition_model):
 
     # Run backward algorithm. The slight inefficiency of using k + 2 and k + 1
     # as indices instead of simply shifting k to start at num_obs or num_obs - 1
-    # was chosen to make the code reflect the equations presented during lecture.
+    # was chosen to make the code reflect the equations presented in lecture.
     for k in xrange(num_obs - 2, 0, -1):
         for cur_state in xrange(num_states):
             temp = backward_probs[k + 2] * transition_model[:, cur_state]
@@ -173,18 +191,17 @@ def get_xis(forward_probs, backward_probs, transition_model, emission_model,
 
     return xis
 
-def update_emission_model(gammas, num_states, num_obs):
+def update_emission_model(sequence, gammas, num_states, num_obs):
     """
     Returns the new emission model based on gamma.
     """
     emission_model = np.tile(np.repeat(None, num_states), (num_obs, 1))
 
-    for k in xrange(num_obs):
-        for cur_state in xrange(num_states):
-            cur_obs =
-            num = np.sum(gammas[:, cur_state] * (sequence[k] == cur_obs))
+    for observed in sequence:
+        for i, cur_state in enumerate(configuration):
+            num = np.sum(gammas[:, cur_state] * (sequence[i] == observed))
             denom = np.sum(gammas[:, cur_state])
-            emission_model[k][cur_state] = float(num) / denom
+            emission_model[observed][cur_state] = float(num) / denom
 
     return emission_model
 
