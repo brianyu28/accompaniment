@@ -251,7 +251,15 @@ in this respect to improve the accuracy of the accompaniment.
 
 \section{System Description}
 
-This system requires Python 3, with the following Python libraries (which are pip installable, and also found in requirements.txt): \texttt{aubio}, \texttt{midi2audio}, \texttt{MIDIUtil}, \texttt{pydub}. The generation of the audio also requires the installation of ffmpeg and fluidsynth, which are brew installable on Mac computers via the commands \texttt{brew install ffmpeg} and \texttt{brew install fluidsynth --with-libdsnfile}. In the latter case, the command line argument is necessary in order to install a sound font that is used to convert MIDI files to WAV files: if installing fluidsynth manually without brew, it's necessary to also install a soundfont (available on fluidsynth's website).
+This system requires Python 3, with the following Python libraries (which are pip installable,
+and also found in requirements.txt): \texttt{aubio}, \texttt{midi2audio}, \texttt{MIDIUtil},
+\texttt{pydub}. The generation of the audio also requires
+the installation of ffmpeg and fluidsynth,
+which are brew installable on Mac computers via the commands \texttt{brew install ffmpeg}
+and \texttt{brew install fluidsynth --with-libdsnfile}. In the latter case, the command line
+argument is necessary in order to install a sound font that is used to convert MIDI files to
+WAV files: if installing fluidsynth manually without brew, it's necessary to also install a
+soundfont (available on fluidsynth's website).
 
 Once all dependencies are installed, you'll need to set up a \texttt{.json} file
 for the song configuration you wish to process audio for. Two samples are already provided in
