@@ -247,9 +247,37 @@ of a number of beats. Using a variant on the Hidden Markov Model that bases tran
 probabilities on the prior $n$ states rather than just the prior 1 might be helpful
 in this respect to improve the accuracy of the accompaniment.
 
+\subsection{Tuning the Transition and Emissions Models}
+
+For our experimentation, we based our transition and emissions model on a heuristic
+based on our own approximation of how we expected the dynamics of our system to
+behave. This heuristic was able to produce reasonably accurate results, as seen
+from the results of the analysis above.
+
+However, an interesting future step for our system would be
+exploring the possibility of optimizing these
+parameters based on actual sensor data and learning the most effective transition
+and emissions models. One such algorithm that allows for unsupervised learning
+of these models is the Baum-Welch algorithm, based on the forward-backward
+algorithm for Hidden Markov Models.
+
+An initial implementation of this algorithm can be found in \texttt{tuning.py},
+wherein \texttt{tuning.py} expects as input a configuration file just as the
+harmonizer does, as well as an input audio file to use to train the emissions
+and transition models. We were able to run the tuner on soloist performance
+audio files for particular configuration files, and produced a resulting
+transition and emissions model. The caveat here is that the models are specific
+only to one particular piece of music: any additional piece of music would
+need to be trained separately. An interesting potential future project
+would be to see whether the Baum-Welch algorithm could be adapted to work
+for general-purpose music and not just one piece in particular.
+
 \appendix
 
 \section{System Description}
+
+All of the code for the project is available at:
+\texttt{https://github.com/brianyu28/accompaniment}
 
 This system requires Python 3, with the following Python libraries (which are pip installable,
 and also found in requirements.txt): \texttt{aubio}, \texttt{midi2audio}, \texttt{MIDIUtil},
