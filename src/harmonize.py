@@ -32,6 +32,7 @@ def main():
 
     # Compute the most likely sequence.
     mls = model.most_likely_sequence(sequence["notes"], configuration["piece"])
+    print(mls)
     volumes = volume.get_volumes(configuration, sequence["notes"], mls)
     generator.generate(filename, sequence, configuration, mls, volumes)
 
