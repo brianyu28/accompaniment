@@ -289,6 +289,10 @@ argument is necessary in order to install a sound font that is used to convert M
 WAV files: if installing fluidsynth manually without brew, it's necessary to also install a
 soundfont (available on fluidsynth's website).
 
+Note: if you have any issues installing a sound font, you can place the
+provided \texttt{default\_sound\_font.sf2} file (located in the \texttt{src} directory)
+in your \texttt{~/.fluidsynth/} directory.
+
 Once all dependencies are installed, you'll need to set up a \texttt{.json} file
 for the song configuration you wish to process audio for. Two samples are already provided in
 \texttt{ode.json} and \texttt{hamilton.json}. To run the program on an audio file other
