@@ -272,6 +272,14 @@ need to be trained separately. An interesting potential future project
 would be to see whether the Baum-Welch algorithm could be adapted to work
 for general-purpose music and not just one piece in particular.
 
+We've run Baum-Welch on a single sample of Ode to Joy, and
+currently it does not produce better accompaniments compared to
+our heuristic transition and emissions models. It remains an open
+question as to why it underperforms: we hypothesize that it may be
+due either to the algorithm finding an undesirable local maximum
+or an insufficient amount of training data to be able to accurately
+gauge what the model should be.
+
 \appendix
 
 \section{System Description}
@@ -318,6 +326,10 @@ and \texttt{AUDIOFILE} is the path to the audio WAV file for the piece
 The produced audio file will be saved as \texttt{output.wav}, which will
 be an audio file that contains both the original audio as well as the system-generated
 accompaniment soundtrack.
+
+Separately, to run the harmonizer with the tuned parameters from
+the Baum-Welch algorithm, replace the line atop \texttt{harmonize.py}
+from \texttt{import model} to \texttt{import tuned_model as model}.
 
 \section{Group Makeup}
 
