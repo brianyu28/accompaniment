@@ -42,16 +42,12 @@ def tune_parameters(sequence, configuration):
     """
     num_states = len(configuration) + 1
     num_obs = len(sequence) + 1
-    print("Num_states")
-    print(num_states)
+    full_sequence = [0] + sequence
 
-    print("Num_obs")
-    print(num_obs)
-
-    print("Sequence:")
-    print(sequence)
-    print("Configuration")
-    print(configuration)
+    # print("Sequence:")
+    # print(sequence)
+    # print("Configuration")
+    # print(configuration)
 
     # Initialize emission and transition probabilities according to our
     # knowledge of the domain
@@ -68,7 +64,8 @@ def tune_parameters(sequence, configuration):
 
     print("Initiating tuning...")
     # Iterate until probabilities converge
-    while i < 20:
+    while i < 3:
+        print("ITERATION {}").format(i + 1)
 
         # Calculate forward and backward probabilities under current models
         forward_probs = forward_alg(sequence, configuration,
@@ -92,11 +89,13 @@ def tune_parameters(sequence, configuration):
 
         # Re-estimate transition probabilities
         old_emissions = emission_model
-        emission_model = update_emission_model(sequence, configuration, gammas, num_states, num_obs)
+        emission_model = update_emission_model(full_sequence, configuration, gammas, num_states, num_obs)
 
         # Re-estimate emission probabilities
         old_transitions = transition_model
         transition_model = update_transition_model(gammas, xis, num_states)
+
+        i += 1
 
     # Return optimized parameters
     print(emission_model)
@@ -178,18 +177,23 @@ def forward_alg(sequence, configuration,
     # Initialize base case according to initial distribution, which is that
     # the probability of being at note 0 is 100%.
     forward_probs = np.tile(np.repeat(None, num_states), (num_obs, 1))
-    forward_probs[0] = np.repeat(0, num_states)
-    forward_probs[0][0] = 1
+    forward_probs[0] = np.repeat(0.0, num_states)
+    forward_probs[0][0] = 1.0
+
+    print("sequence: {}").format(sequence)
 
     # Do forward algorithm calculations using current emission and transition
     # models, as well as the previously calculated forward probabilities.
     for t in xrange(1, num_obs):
         for cur_state in xrange(num_states):
             temp = np.dot(forward_probs[t - 1], transition_model[cur_state])
+            print("temp: {}").format(temp)
             cur_obs = sequence[t - 1]
-            cur_note = configuration[cur_state - 1]
+            print("cur_obs: {}").format(cur_obs)
             prob = temp * emission_model[cur_obs][cur_state]
+            print("prob: {}").format(prob)
             forward_probs[t][cur_state] = prob
+        print("Forward_probs row {}: {}").format(t, forward_probs[t])
         forward_probs[t] = normalize(forward_probs[t])
 
     print("Forward probabilities")
@@ -211,8 +215,8 @@ def backward_alg(sequence, configuration,
     # the probability of transitioning from the penultimate to the final state.
     backward_probs = np.tile(np.repeat(None, num_states), (num_obs, 1))
     backward_probs[num_obs - 1] = transition_model[num_states - 1]
-    backward_probs[0] = np.repeat(0, num_states)
-    backward_probs[0][0] = 1
+    backward_probs[0] = np.repeat(0.0, num_states)
+    backward_probs[0][0] = 1.0
 
     # Run backward algorithm. The slight inefficiency of using k + 2 and k + 1
     # as indices instead of simply shifting k to start at num_obs or num_obs - 1
@@ -260,12 +264,16 @@ def get_xis(forward_probs, backward_probs, transition_model, emission_model,
         for cur_state in xrange(num_states):
             for next_state in xrange(num_states):
                 prob = (forward_probs[k][cur_state]
-                       * transition_model[next_state][cur_state]
-                       * emission_model[sequence[k - 1]][next_state])
-                if k < num_obs - 1:
+                       * transition_model[next_state][cur_state])
+                if k == 0:
+                    prob = prob * emission_model[0][next_state]
+                else:
+                    prob = prob * emission_model[sequence[k - 1]][next_state]
+                if k < (num_obs - 1):
                     prob = prob * backward_probs[k + 1][cur_state]
                 xis[k][cur_state][next_state] = prob
-            xis[k][cur_state] = normalize(xis[k][cur_state])
+            if sum(xis[k][cur_state]) != 0:
+                xis[k][cur_state] = normalize(xis[k][cur_state])
 
     print("Xis")
     print(xis)
@@ -276,13 +284,20 @@ def update_emission_model(sequence, configuration, gammas, num_states, num_obs):
     """
     Returns the new emission model based on gamma.
     """
-    emission_model = np.tile(np.repeat(None, num_states), (128, 1))
+    emission_model = np.tile(np.repeat(1.0, num_states), (128, 1))
 
     for observed in sequence:
-        for cur_state in xrange(num_states - 1):
+        for cur_state in xrange(num_states):
             num = np.sum(gammas[:, cur_state] * (sequence[cur_state] == observed))
             denom = np.sum(gammas[:, cur_state])
-            emission_model[observed][cur_state] = float(num) / denom
+            if denom != 0.0:
+                emission_model[observed][cur_state] = float(num) / denom
+            else:
+                emission_model[observed][cur_state] = 0.0
+        # print("Row: {}").format(emission_model[observed])
+    for i in xrange(128):
+        # print("Row {}: {}").format(i, emission_model[i])
+        emission_model[i] = normalize(emission_model[i])
 
     print("New emission model")
     print(emission_model)
@@ -298,8 +313,14 @@ def update_transition_model(gammas, xis, num_states):
     for next_state in xrange(num_states):
         for cur_state in xrange(num_states):
             num = np.sum(xis[:, cur_state, next_state])
+            # print("Num: {}").format(num)
             denom = np.sum(gammas[:, cur_state])
-            transition_model[next_state][cur_state] = float(num) / denom
+            # print("Denom: {}").format(denom)
+            if denom != 0.0:
+                transition_model[next_state][cur_state] = float(num) / denom
+            else:
+                transition_model[next_state][cur_state] = 0.0
+        transition_model[next_state] = normalize(transition_model[next_state])
 
     print("New transition model")
     print(transition_model)
