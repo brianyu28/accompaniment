@@ -6,7 +6,7 @@ def get_volumes(configuration, sequence, mls):
     """
     Given a configuration piece and a sequence of notes
     with their corresponding velocities, performs k-means
-    clustering to identify the likely volumes of the 
+    clustering to identify the likely volumes of the
     dynamic symbols in the piece.
     """
     played = set()

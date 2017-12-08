@@ -22,6 +22,8 @@ def generate(filename, sequence, configuration, mls, volumes):
         if note_number in notes or \
            str(note_number) not in configuration["accompaniment"]:
             continue
+
+        # Add note to dictionary.
         time = sequence["notes"][i - 1][0]
         velocity = volumes[configuration["piece"][note_number - 1]["vel"]]
         pitches = configuration["accompaniment"][str(note_number)]
@@ -39,10 +41,12 @@ def generate(filename, sequence, configuration, mls, volumes):
     # Set duration of the final note.
     notes[prev]["duration"] = sequence["duration"] - notes[prev]["time"]
 
-    # Add notes to MIDI file.
+    # Configure MIDI file.
     midifile = MIDIFile(1, adjust_origin=True)
     track, channel = 0, 0
     midifile.addTempo(0, 0, 60)
+
+    # Add notes to MIDI file.
     for i in range(1, prev + 1):
         if i not in notes:
             continue
@@ -58,7 +62,11 @@ def generate(filename, sequence, configuration, mls, volumes):
     # Convert temporary MIDI file to teporary WAV file.
     FluidSynth().midi_to_audio("{}.mid".format(identifier),
                                "{}.wav".format(identifier))
+
+    # Combine accompaniment audio with soloist audio.
     merge(filename, "{}.wav".format(identifier), "output.wav")
+
+    # Clean up temporary files.
     os.remove("{}.mid".format(identifier))
     os.remove("{}.wav".format(identifier))
 
