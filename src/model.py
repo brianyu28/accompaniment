@@ -75,7 +75,7 @@ def emission(observed, hidden):
     # Default to each probability having equal weight.
     probs = [1 for i in range(128)]
 
-    # Add weight to states within a range of 5 from the actual.
+    # Add weight to states within a distance of 2 from the actual.
     for i in range(3):
         for j in range(max(0, hidden - i), min(128, hidden + i + 1)):
             probs[j] += 10
